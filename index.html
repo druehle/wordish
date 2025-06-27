@@ -499,15 +499,20 @@
         }
         
         .game-info {
-            flex-direction: column;
-            gap: 8px;
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 4px;
             margin-bottom: 15px;
+            flex-wrap: nowrap;
         }
-        
+
         .stats-btn, .new-game-btn, .hint-btn {
-            padding: 8px 16px;
-            font-size: 11px;
-            border-radius: 20px;
+            padding: 6px 8px;
+            font-size: 9px;
+            border-radius: 15px;
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
         }
         
         .header {

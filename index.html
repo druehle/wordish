@@ -922,15 +922,26 @@
             const keyElement = dom.get(`key-${letter}`);
             if (!keyElement) return;
             
-            // Priority: correct > present > absent
-            const currentResult = keyElement.classList.contains('correct') ? 'correct' :
-                                keyElement.classList.contains('present') ? 'present' : 'absent';
+            // Remove the 'used' class first since we're about to apply the actual result
+            keyElement.classList.remove('used');
             
-            if (result === 'correct' || 
-                (result === 'present' && currentResult !== 'correct') ||
-                (result === 'absent' && currentResult === 'absent')) {
-                keyElement.classList.remove('correct', 'present', 'absent');
-                keyElement.classList.add(result);
+            // Get current state
+            const hasCorrect = keyElement.classList.contains('correct');
+            const hasPresent = keyElement.classList.contains('present');
+            
+            // Priority: correct > present > absent
+            // Only update if the new result has higher or equal priority
+            if (result === 'correct') {
+                // Correct always takes priority
+                keyElement.classList.remove('present', 'absent');
+                keyElement.classList.add('correct');
+            } else if (result === 'present' && !hasCorrect) {
+                // Present only if not already correct
+                keyElement.classList.remove('absent');
+                keyElement.classList.add('present');
+            } else if (result === 'absent' && !hasCorrect && !hasPresent) {
+                // Absent only if not already correct or present
+                keyElement.classList.add('absent');
             }
         }
 
@@ -938,8 +949,6 @@
             const isWin = gameState.currentGuess === gameState.currentWord;
             const isLoss = gameState.currentAttempt >= CONFIG.MAX_ATTEMPTS;
             
-            alert("currentGuess: " + currentGuess + "\ncurrentWord: " + gameState.currentWord + "\nisWin: " + isWin + "\nisLoss: " + isLoss);
-
             if (isWin) {
                 handleWin();
             } else if (isLoss) {

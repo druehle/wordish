@@ -44,7 +44,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 15px;
         margin-bottom: 20px;
     }
@@ -499,11 +499,13 @@
         }
         
         .game-info {
+            display: flex;
             flex-direction: row;
             justify-content: space-between;
             gap: 4px;
             margin-bottom: 15px;
             flex-wrap: nowrap;
+            width: 100%;
         }
 
         .stats-btn, .new-game-btn, .hint-btn {
@@ -513,6 +515,7 @@
             flex: 1;
             min-width: 0;
             white-space: nowrap;
+            display: inline-block;
         }
         
         .header {

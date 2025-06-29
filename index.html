@@ -130,6 +130,13 @@
             animation: flip 0.6s ease-in-out;
         }
 
+        .letter-box.hint {
+            background: #763bb5;
+            border-color: #763bb5;
+            color: white;
+            animation: flip 0.6s ease-in-out;
+        }
+
         .letter-box.absent {
             background: #3a3a3c;
             border-color: #3a3a3c;
@@ -1042,29 +1049,44 @@
             dom.get('statsModal').classList.add('show');
         }
 
-        function showHint() {
-            if (gameState.hintsEarned <= 0) {
-                showMessage('No hints available! Win a game to earn hints.');
-                return;
-            }
-            
-            if (gameState.gameEnded) {
-                showMessage('Game is over! Start a new game to use hints.');
-                return;
-            }
-            
-            const availableHints = getAvailableHints();
-            if (availableHints.length === 0) {
-                showMessage('No more hints available for this word!');
-                return;
-            }
-            
-            const randomHint = availableHints[Math.floor(Math.random() * availableHints.length)];
-            gameState.hintsEarned--;
-            saveGameData();
-            updateDisplay();
-            showMessage(`Hint: Position ${randomHint.position + 1} is "${randomHint.letter}"`);
+    function showHint() {
+        if (gameState.hintsEarned <= 0) {
+            showMessage('No hints available! Win a game to earn hints.');
+            return;
         }
+        
+        if (gameState.gameEnded) {
+            showMessage('Game is over! Start a new game to use hints.');
+            return;
+        }
+        
+        const availableHints = getAvailableHints();
+        if (availableHints.length === 0) {
+            showMessage('No more hints available for this word!');
+            return;
+        }
+        
+        const randomHint = availableHints[Math.floor(Math.random() * availableHints.length)];
+        gameState.hintsEarned--;
+        saveGameData();
+        updateDisplay();
+        
+        // Find the next empty row to show the hint
+        const currentRow = dom.get(`row-${gameState.currentAttempt}`);
+        const cell = currentRow.querySelector(`#cell-${gameState.currentAttempt}-${randomHint.position}`);
+        
+        // Set the letter and add hint styling
+        cell.textContent = randomHint.letter;
+        cell.classList.add('hint');
+        
+        // Also update the keyboard key
+        const keyElement = dom.get(`key-${randomHint.letter}`);
+        if (keyElement && !keyElement.classList.contains('correct')) {
+            keyElement.classList.add('correct');
+        }
+        
+        showMessage(`Hint used! Position ${randomHint.position + 1} revealed.`);
+    }
 
         function getAvailableHints() {
             const knownPositions = new Set();

@@ -817,6 +817,11 @@
             const cells = row.querySelectorAll('.letter-box');
             
             cells.forEach((cell, index) => {
+                // Skip cells that have hints - don't overwrite them
+                if (cell.classList.contains('hint')) {
+                    return;
+                }
+                
                 if (index < gameState.currentGuess.length) {
                     cell.textContent = gameState.currentGuess[index];
                     cell.classList.add('filled');
@@ -1049,49 +1054,53 @@
             dom.get('statsModal').classList.add('show');
         }
 
-    function showHint() {
-        if (gameState.hintsEarned <= 0) {
-            showMessage('No hints available! Win a game to earn hints.');
-            return;
+        function showHint() {
+            if (gameState.hintsEarned <= 0) {
+                showMessage('No hints available! Win a game to earn hints.');
+                return;
+            }
+            
+            if (gameState.gameEnded) {
+                showMessage('Game is over! Start a new game to use hints.');
+                return;
+            }
+            
+            const availableHints = getAvailableHints();
+
+            if (availableHints.length === 0) {
+                showMessage('No more hints available for this word!');
+                return;
+            }
+            
+            const randomHint = availableHints[Math.floor(Math.random() * availableHints.length)];
+            showMessage(`Hint: ${randomHint.position} - ${randomHint.letter}`);
+
+            gameState.hintsEarned--;
+            saveGameData();
+            updateDisplay();
+            
+            // Find the next empty row to show the hint
+            const currentRow = dom.get(`row-${gameState.currentAttempt}`);
+            const cell = currentRow.querySelector(`#cell-${gameState.currentAttempt}-${randomHint.position}`);
+            
+            // Set the letter and add hint styling
+            cell.textContent = randomHint.letter;
+            cell.classList.add('hint');
+            
+            // Also update the keyboard key
+            const keyElement = dom.get(`key-${randomHint.letter}`);
+            if (keyElement && !keyElement.classList.contains('correct')) {
+                keyElement.classList.add('correct');
+            }
+            
+            showMessage(`Hint used! Position ${randomHint.position + 1} revealed.`);
         }
-        
-        if (gameState.gameEnded) {
-            showMessage('Game is over! Start a new game to use hints.');
-            return;
-        }
-        
-        const availableHints = getAvailableHints();
-        if (availableHints.length === 0) {
-            showMessage('No more hints available for this word!');
-            return;
-        }
-        
-        const randomHint = availableHints[Math.floor(Math.random() * availableHints.length)];
-        gameState.hintsEarned--;
-        saveGameData();
-        updateDisplay();
-        
-        // Find the next empty row to show the hint
-        const currentRow = dom.get(`row-${gameState.currentAttempt}`);
-        const cell = currentRow.querySelector(`#cell-${gameState.currentAttempt}-${randomHint.position}`);
-        
-        // Set the letter and add hint styling
-        cell.textContent = randomHint.letter;
-        cell.classList.add('hint');
-        
-        // Also update the keyboard key
-        const keyElement = dom.get(`key-${randomHint.letter}`);
-        if (keyElement && !keyElement.classList.contains('correct')) {
-            keyElement.classList.add('correct');
-        }
-        
-        showMessage(`Hint used! Position ${randomHint.position + 1} revealed.`);
-    }
+
 
         function getAvailableHints() {
             const knownPositions = new Set();
             
-            // Check all previous guesses to find known correct positions
+            // Check all previous guesses to find positions that were marked as correct
             for (let attempt = 0; attempt < gameState.currentAttempt; attempt++) {
                 const row = dom.get(`row-${attempt}`);
                 const cells = row.querySelectorAll('.letter-box');
@@ -1102,6 +1111,16 @@
                     }
                 });
             }
+            
+            // Also check the current row for positions that already have hints
+            const currentRow = dom.get(`row-${gameState.currentAttempt}`);
+            const cells = currentRow.querySelectorAll('.letter-box');
+            
+            cells.forEach((cell, position) => {
+                if (cell.classList.contains('correct') || cell.classList.contains('hint')) {
+                    knownPositions.add(position);
+                }
+            });
             
             // Return available hints (positions not yet known)
             const availableHints = [];
